@@ -15,6 +15,7 @@ ma = Marshmallow(app)
 from models import Product
 from schemas import products_schema, product_schema
 
+from flask import request
 
 @app.route('/hello')
 def hello():
@@ -43,6 +44,9 @@ def del_product(product_id):
 
 @app.route('/products', methods=['POST'])
 def create_product():
-    products = db.session.query(Product).all()
-    return products_schema.jsonify(products)
+    body = request.get_json()
+    product = Product(name = body['name'], description = body['description'])
+    db.session.add(product)
+    db.session.commit()
+    return ('Product inserted', 202)
 
