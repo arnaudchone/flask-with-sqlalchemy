@@ -50,3 +50,12 @@ def create_product():
     db.session.commit()
     return ('Product inserted', 202)
 
+@app.route('/products', methods=['PATCH'])
+def patch_product():
+    body = request.get_json()
+    product = db.session.query(Product).get(body['id'])
+    product.name = body['name']
+    product.description = body['description']
+    db.session.add(product)
+    db.session.commit()
+    return ('Updated product', 204)
