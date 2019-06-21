@@ -34,6 +34,9 @@ def hello():
 
 @app.route('/products')
 def products():
+    from tasks import very_slow_add
+    very_slow_add.delay(1, 2) # This pushes a task to Celery and does not block.
+
     products = db.session.query(Product).all() # SQLAlchemy request => 'SELECT * FROM products'
     return products_schema.jsonify(products)
 
