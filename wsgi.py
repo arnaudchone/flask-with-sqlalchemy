@@ -1,7 +1,10 @@
 # wsgi.py
 import logging
 
-from flask import Flask
+from flask import Flask, render_template
+from flask_admin import Admin
+from flask_admin.contrib.sqla import ModelView
+
 from config import Config
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -16,6 +19,20 @@ from models import Product
 from schemas import products_schema, product_schema
 
 from flask import request
+
+admin = Admin(app, template_mode='bootstrap3')
+admin.add_view(ModelView(Product, db.session))
+
+@app.route('/')
+def home():
+    products = db.session.query(Product).all()
+    return render_template('home.html', products=products)
+
+@app.route('/<int:id>')
+def product_html(id):
+    product = db.session.query(Product).get(id)
+    return render_template('product.html', product=product)
+
 
 @app.route('/hello')
 def hello():
@@ -34,6 +51,7 @@ def get_product(product_id):
 
 @app.route('/products/<int:product_id>', methods=['DELETE'])
 def del_product(product_id):
+    # db.session.query(Product).filter(id=product_id).delete()
     product = db.session.query(Product).get(product_id)
     if product:
         db.session.delete(product)
@@ -45,10 +63,11 @@ def del_product(product_id):
 @app.route('/products', methods=['POST'])
 def create_product():
     body = request.get_json()
-    product = Product(name = body['name'], description = body['description'])
+    # new_product = product_schema.load(body)
+    product = Product(name = body['name'], description = body.get('description', ''))
     db.session.add(product)
     db.session.commit()
-    return ('Product inserted', 202)
+    return product_schema.jsonify(product), 201
 
 @app.route('/products', methods=['PATCH'])
 def patch_product():
@@ -58,4 +77,4 @@ def patch_product():
     product.description = body['description']
     db.session.add(product)
     db.session.commit()
-    return ('Updated product', 204)
+    return ('', 204)
