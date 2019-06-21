@@ -34,6 +34,7 @@ def get_product(product_id):
 
 @app.route('/products/<int:product_id>', methods=['DELETE'])
 def del_product(product_id):
+    # db.session.query(Product).filter(id=product_id).delete()
     product = db.session.query(Product).get(product_id)
     if product:
         db.session.delete(product)
@@ -45,10 +46,11 @@ def del_product(product_id):
 @app.route('/products', methods=['POST'])
 def create_product():
     body = request.get_json()
-    product = Product(name = body['name'], description = body['description'])
+    # new_product = product_schema.load(body)
+    product = Product(name = body['name'], description = body.get('description', ''))
     db.session.add(product)
     db.session.commit()
-    return ('Product inserted', 202)
+    return product_schema.jsonify(product), 201
 
 @app.route('/products', methods=['PATCH'])
 def patch_product():
@@ -58,4 +60,4 @@ def patch_product():
     product.description = body['description']
     db.session.add(product)
     db.session.commit()
-    return ('Updated product', 204)
+    return ('', 204)
